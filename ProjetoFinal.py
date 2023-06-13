@@ -10,7 +10,6 @@ SCREEN_HEIGHT = 600
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Projeto de Guilherme Tagliari e Lorenzo Pasa")
@@ -25,7 +24,7 @@ markings = []
 
 def draw_markings():
     for marking in markings:
-        pygame.draw.circle(screen, RED, marking[0], 10)
+        pygame.draw.circle(screen, WHITE, marking[0], 5)
         font = pygame.font.Font(None, 20)
         text = font.render(marking[1], True, BLACK)
         screen.blit(text, marking[0])
@@ -63,6 +62,8 @@ background = pygame.image.load("imagem dos pilares da criação.png")
 clock = pygame.time.Clock()
 running = True
 saved_points = False
+mouse_pressed = False
+current_position = None  # Variável para armazenar a posição atual do clique
 
 while running:
     clock.tick(60)
@@ -73,9 +74,15 @@ while running:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                name = open_dialog()
-                position = pygame.mouse.get_pos()
-                markings.append([position, name])
+                mouse_pressed = True
+                current_position = pygame.mouse.get_pos()
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 1 and mouse_pressed:
+                mouse_pressed = False
+                if current_position:
+                    name = open_dialog()
+                    markings.append([current_position, name])
+                    current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
                 saved_points = True
@@ -95,7 +102,9 @@ while running:
 
     if saved_points:
         save_markings()
-        display_text("Pontos salvos!", font, WHITE,70, 10, 70)
+        display_text("Pontos salvos!", font, WHITE, 10, 70)
         saved_points = False
+
     pygame.display.flip()
+
 pygame.quit()
