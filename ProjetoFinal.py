@@ -3,30 +3,23 @@ import tkinter as tk
 from tkinter import simpledialog
 import os
 
-
 pygame.init()
-
 
 SCREEN_WIDTH = 800
 SCREEN_HEIGHT = 600
-
 
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 
-
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Projeto de Guilherme Tagliari e Lorenzo Pasa")
-
 
 icon = pygame.image.load("space.png")
 pygame.display.set_icon(icon)
 
-
 pygame.mixer.music.load("Space_Machine_Power.mp3")
 pygame.mixer.music.play(-1)
-
 
 markings = []
 
@@ -52,6 +45,8 @@ def load_markings():
 
 def clear_markings():
     markings.clear()
+    if os.path.exists("markings.txt"):
+        os.remove("markings.txt")
 
 def open_dialog():
     root = tk.Tk()
@@ -59,12 +54,16 @@ def open_dialog():
     name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
     return name
 
+def display_text(text, font, color, x, y):
+    text_surface = font.render(text, True, color)
+    screen.blit(text_surface, (x, y))
 
-background = pygame.image.load("bg.jpg")
+background = pygame.image.load("imagem dos pilares da criação.png")
 
-
-running = True
 clock = pygame.time.Clock()
+running = True
+saved_points = False
+
 while running:
     clock.tick(60)
 
@@ -77,9 +76,26 @@ while running:
                 name = open_dialog()
                 position = pygame.mouse.get_pos()
                 markings.append([position, name])
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_F10:
+                saved_points = True
+            elif event.key == pygame.K_F11:
+                clear_markings()
+                load_markings()
+            elif event.key == pygame.K_F12:
+                clear_markings()
 
     screen.blit(background, (0, 0))
     draw_markings()
-    pygame.display.flip()
 
+    font = pygame.font.Font(None, 20)
+    display_text("F10 Para salvar os pontos", font, WHITE, 10, 10)
+    display_text("F11 Para carregar os pontos salvos", font, WHITE, 10, 30)
+    display_text("F12 Para deletar os pontos", font, WHITE, 10, 50)
+
+    if saved_points:
+        save_markings()
+        display_text("Pontos salvos!", font, WHITE,70, 10, 70)
+        saved_points = False
+    pygame.display.flip()
 pygame.quit()
