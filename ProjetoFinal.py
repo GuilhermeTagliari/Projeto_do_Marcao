@@ -88,12 +88,14 @@ while running:
                     current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
-                saved_points = True
+                if not saved_points:
+                    saved_points = True
             elif event.key == pygame.K_F11:
                 clear_markings()
                 load_markings()
             elif event.key == pygame.K_F12:
                 clear_markings()
+                saved_points = False
 
     screen.blit(background, (0, 0))
     draw_markings()
@@ -106,7 +108,6 @@ while running:
     if saved_points:
         save_markings()
         display_text("Pontos salvos!", font, WHITE, 10, 70)
-        saved_points = False
 
     pygame.display.flip()
 
