@@ -23,11 +23,14 @@ pygame.mixer.music.play(-1)
 markings = []
 
 def draw_markings():
-    for marking in markings:
-        pygame.draw.circle(screen, WHITE, marking[0], 5)
+    for i in range(len(markings)):
+        pygame.draw.circle(screen, WHITE, markings[i][0], 5)
         font = pygame.font.Font(None, 20)
-        text = font.render(marking[1], True, BLACK)
-        screen.blit(text, marking[0])
+        text = font.render(markings[i][1], True, BLACK)
+        screen.blit(text, markings[i][0])
+        
+        if i > 0:
+            pygame.draw.line(screen, WHITE, markings[i-1][0], markings[i][0])
 
 def save_markings():
     with open("markings.txt", "w") as file:
@@ -63,7 +66,7 @@ clock = pygame.time.Clock()
 running = True
 saved_points = False
 mouse_pressed = False
-current_position = None  # Variável para armazenar a posição atual do clique
+current_position = None
 
 while running:
     clock.tick(60)
