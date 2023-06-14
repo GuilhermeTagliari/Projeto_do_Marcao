@@ -18,7 +18,7 @@ icon = pygame.image.load("space.png")
 pygame.display.set_icon(icon)
 
 pygame.mixer.music.load("Space_Machine_Power.mp3")
-pygame.mixer.music.play(-10)
+pygame.mixer.music.play(-1)
 
 markings = []
 
@@ -29,7 +29,7 @@ def draw_markings():
         pos, name = markings[i]
         pygame.draw.circle(screen, WHITE, pos, 5)
         font = pygame.font.Font(None, 20)
-        text = font.render(f"{name} {pos}", True, BLACK)
+        text = font.render(name, True, BLACK)
         screen.blit(text, pos)
 
         if i > 0:
@@ -42,19 +42,19 @@ def draw_markings():
             midpoint_x = (pos[0] + prev_pos[0]) // 2
             midpoint_y = (pos[1] + prev_pos[1]) // 2
 
-            if mouse_por_cima_da_linha(mouse_pos, prev_pos, pos):
+            if mouse_over_line(mouse_pos, prev_pos, pos):
                 text = font.render(str(diff_text), True, WHITE)
                 screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
 
-def mouse_por_cima_da_linha(pos_mouse, pos_inicial, pos_final):
+def mouse_over_line(mouse_pos, start_pos, end_pos):
     threshold = 5
-    x1, y1 = pos_inicial
-    x2, y2 = pos_final
-    x, y = pos_mouse
+    x1, y1 = start_pos
+    x2, y2 = end_pos
+    x, y = mouse_pos
 
-    distancia = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+    distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
 
-    return distancia <= threshold
+    return distance <= threshold
 
 def save_markings():
     try:
@@ -79,6 +79,8 @@ def load_markings():
                         print("Erro ao carregar as coordenadas das estrelas!")
         except IOError:
             print("Erro ao carregar os pontos!")
+    else:
+        print("Arquivo de marcações não encontrado.")
 
 def clear_markings():
     markings.clear()
@@ -91,9 +93,14 @@ def clear_markings():
 def open_dialog():
     root = tk.Tk()
     root.withdraw()
+    root.update()
     try:
         name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
-        return name
+        if name:
+            return name
+        else:
+            x, y = current_position
+            return f"Desconhecida ({x}, {y})"
     except Exception as e:
         print("Erro ao exibir o diálogo:", str(e))
         return None
@@ -130,8 +137,6 @@ while running:
                     name = open_dialog()
                     if name:
                         markings.append((current_position, name))
-                    else:
-                        markings.append((current_position, f"Desconhecido {current_position}"))
                     current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
