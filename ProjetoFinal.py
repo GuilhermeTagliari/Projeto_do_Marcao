@@ -18,69 +18,85 @@ icon = pygame.image.load("space.png")
 pygame.display.set_icon(icon)
 
 pygame.mixer.music.load("Space_Machine_Power.mp3")
-pygame.mixer.music.play(-1)
+pygame.mixer.music.play(-10)
 
 markings = []
 
 def draw_markings():
-    mouse_pos = pygame.mouse.get_pos()  
+    mouse_pos = pygame.mouse.get_pos()
 
     for i in range(len(markings)):
-        pygame.draw.circle(screen, WHITE, markings[i][0], 5)
+        pos, name = markings[i]
+        pygame.draw.circle(screen, WHITE, pos, 5)
         font = pygame.font.Font(None, 20)
-        text = font.render(markings[i][1], True, BLACK)
-        screen.blit(text, markings[i][0])
+        text = font.render(name, True, BLACK)
+        screen.blit(text, pos)
 
         if i > 0:
-            pygame.draw.line(screen, WHITE, markings[i - 1][0], markings[i][0])
+            prev_pos, _ = markings[i - 1]
+            pygame.draw.line(screen, WHITE, prev_pos, pos)
+            diff_x = pos[0] - prev_pos[0]
+            diff_y = pos[1] - prev_pos[1]
+            diff_text = f"({diff_x}, {diff_y})"
 
-            
-            diff_x = markings[i][0][0] - markings[i - 1][0][0]
-            diff_y = markings[i][0][1] - markings[i - 1][0][1]
-            diff_text =  {diff_x}, {diff_y}
+            midpoint_x = (pos[0] + prev_pos[0]) // 2
+            midpoint_y = (pos[1] + prev_pos[1]) // 2
 
-        
-            midpoint_x = (markings[i][0][0] + markings[i - 1][0][0]) // 2
-            midpoint_y = (markings[i][0][1] + markings[i - 1][0][1]) // 2
-
-            if is_mouse_over_line(mouse_pos, markings[i - 1][0], markings[i][0]):
-                text = font.render(diff_text, True, WHITE)
+            if mouse_por_cima_da_linha(mouse_pos, prev_pos, pos):
+                text = font.render(str(diff_text), True, WHITE)
                 screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
 
-def is_mouse_over_line(pos_mouse, pos_inicial, pos_final):
-    threshold = 5  
+def mouse_por_cima_da_linha(pos_mouse, pos_inicial, pos_final):
+    threshold = 5
     x1, y1 = pos_inicial
     x2, y2 = pos_final
     x, y = pos_mouse
 
-    
     distancia = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
 
     return distancia <= threshold
 
 def save_markings():
-    with open("markings.txt", "a") as file:
-        for marking in markings:
-            file.write(f"{marking[0][0]},{marking[0][1]},{marking[1]}\n")
+    try:
+        with open("markings.txt", "w") as file:
+            for pos, name in markings:
+                file.write(f"{pos[0]},{pos[1]},{name}\n")
+    except IOError:
+        print("Erro ao salvar os pontos!")
 
 def load_markings():
+    markings.clear()
     if os.path.exists("markings.txt"):
-        with open("markings.txt", "r") as file:
-            lines = file.readlines()
-            for line in lines:
-                x, y, name = line.strip().split(",")
-                markings.append([(int(x), int(y)), name])
+        try:
+            with open("markings.txt", "r") as file:
+                lines = file.readlines()
+                for line in lines:
+                    try:
+                        x, y, name = line.strip().split(",")
+                        pos = (int(x), int(y))
+                        markings.append((pos, name))
+                    except ValueError:
+                        print("Erro ao carregar as coordenadas das estrelas!")
+        except IOError:
+            print("Erro ao carregar os pontos!")
 
 def clear_markings():
     markings.clear()
     if os.path.exists("markings.txt"):
-        os.remove("markings.txt")
+        try:
+            os.remove("markings.txt")
+        except OSError:
+            print("Erro ao deletar os pontos!")
 
 def open_dialog():
     root = tk.Tk()
     root.withdraw()
-    name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
-    return name
+    try:
+        name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
+        return name
+    except Exception as e:
+        print("Erro ao exibir o diálogo:", str(e))
+        return None
 
 def display_text(text, font, color, x, y):
     text_surface = font.render(text, True, color)
@@ -93,6 +109,8 @@ running = True
 saved_points = False
 mouse_pressed = False
 current_position = None
+
+load_markings()
 
 while running:
     clock.tick(60)
@@ -110,21 +128,25 @@ while running:
                 mouse_pressed = False
                 if current_position:
                     name = open_dialog()
-                    markings.append([current_position, name])
+                    if name:
+                        markings.append((current_position, name))
+                    else:
+                        markings.append((current_position, "Desconhecido"))
                     current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
                 if not saved_points:
+                    save_markings()
                     saved_points = True
             elif event.key == pygame.K_F11:
-                clear_markings()
                 load_markings()
-            elif event.key == pygame.K_F12:
-                clear_markings()
                 saved_points = False
             elif event.key == pygame.K_ESCAPE:
                 save_markings()
                 running = False
+            elif event.key == pygame.K_F12:
+                clear_markings()
+                saved_points = False
 
     screen.blit(background, (0, 0))
     draw_markings()
@@ -135,7 +157,6 @@ while running:
     display_text("F12 Para deletar os pontos", font, WHITE, 10, 50)
 
     if saved_points:
-        save_markings()
         display_text("Pontos salvos!", font, WHITE, 10, 70)
 
     pygame.display.flip()
