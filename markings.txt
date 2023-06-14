@@ -1,22 +1,2 @@
-<<<<<<< HEAD
-483,254,Desconhecido
-255,366,Desconhecido
-520,461,Desconhecido
-328,521,Desconhecido
-274,232,Desconhecido
-472,136,Desconhecido
-677,431,Desconhecido
-52,252,Desconhecido
-297,128,Desconhecido
-549,524,Desconhecido
-168,473,Desconhecido
-626,181,Desconhecido
-141,388,h
-=======
-464,184,opa
-351,293,apo
-595,195,estrela 1
-441,259,estrela 2
-537,177,ola
-286,148,tchau
->>>>>>> 177e241200bf81cb83d7dad3b85ab8d4303c5441
+442,221,Desconhecido
+214,326,Desconhecido
