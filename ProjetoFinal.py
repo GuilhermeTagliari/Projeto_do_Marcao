@@ -23,17 +23,43 @@ pygame.mixer.music.play(-1)
 markings = []
 
 def draw_markings():
+    mouse_pos = pygame.mouse.get_pos()  
+
     for i in range(len(markings)):
         pygame.draw.circle(screen, WHITE, markings[i][0], 5)
         font = pygame.font.Font(None, 20)
         text = font.render(markings[i][1], True, BLACK)
         screen.blit(text, markings[i][0])
-        
+
         if i > 0:
-            pygame.draw.line(screen, WHITE, markings[i-1][0], markings[i][0])
+            pygame.draw.line(screen, WHITE, markings[i - 1][0], markings[i][0])
+
+            
+            diff_x = markings[i][0][0] - markings[i - 1][0][0]
+            diff_y = markings[i][0][1] - markings[i - 1][0][1]
+            diff_text = f"ΔX: {diff_x}, ΔY: {diff_y}"
+
+        
+            midpoint_x = (markings[i][0][0] + markings[i - 1][0][0]) // 2
+            midpoint_y = (markings[i][0][1] + markings[i - 1][0][1]) // 2
+
+            if is_mouse_over_line(mouse_pos, markings[i - 1][0], markings[i][0]):
+                text = font.render(diff_text, True, WHITE)
+                screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
+
+def is_mouse_over_line(pos_mouse, pos_inicial, pos_final):
+    threshold = 5  
+    x1, y1 = pos_inicial
+    x2, y2 = pos_final
+    x, y = pos_mouse
+
+    
+    distancia = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+
+    return distancia <= threshold
 
 def save_markings():
-    with open("markings.txt", "w") as file:
+    with open("markings.txt", "a") as file:
         for marking in markings:
             file.write(f"{marking[0][0]},{marking[0][1]},{marking[1]}\n")
 
@@ -96,6 +122,9 @@ while running:
             elif event.key == pygame.K_F12:
                 clear_markings()
                 saved_points = False
+            elif event.key == pygame.K_ESCAPE:
+                save_markings()
+                running = False
 
     screen.blit(background, (0, 0))
     draw_markings()
