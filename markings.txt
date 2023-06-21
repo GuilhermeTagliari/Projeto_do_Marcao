@@ -1,4 +1,2 @@
-573,334,Desconhecida (573, 334)
-306,483,Desconhecida (306, 483)
-247,309,Desconhecida (247, 309)
-517,193,Desconhecida (517, 193)
+257,285,a
+414,423,s

@@ -65,7 +65,6 @@ def save_markings():
         print("Erro ao salvar os pontos!")
 
 def load_markings():
-    markings.clear()
     if os.path.exists("markings.txt"):
         try:
             with open("markings.txt", "r") as file:
@@ -83,7 +82,6 @@ def load_markings():
         print("Arquivo de marcações não encontrado.")
 
 def clear_markings():
-    markings.clear()
     if os.path.exists("markings.txt"):
         try:
             os.remove("markings.txt")
@@ -116,8 +114,6 @@ running = True
 saved_points = False
 mouse_pressed = False
 current_position = None
-
-load_markings()
 
 while running:
     clock.tick(60)
