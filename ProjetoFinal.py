@@ -60,7 +60,10 @@ def save_markings():
     try:
         with open("markings.txt", "w") as file:
             for pos, name in markings:
-                file.write(f"{pos[0]},{pos[1]},{name}\n")
+                if name == "Desconhecida":
+                    file.write(f"{pos[0]},{pos[1]}\n")
+                else:
+                    file.write(f"{pos[0]},{pos[1]},{name}\n")
     except IOError:
         print("Erro ao salvar os pontos!")
 
