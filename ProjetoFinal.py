@@ -14,7 +14,7 @@ BLACK = (0, 0, 0)
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Projeto de Guilherme Tagliari e Lorenzo Pasa")
 
-icon = pygame.image.load("space.png")
+icon = pygame.image.load("icon2.png")
 pygame.display.set_icon(icon)
 
 pygame.mixer.music.load("Space_Machine_Power.mp3")
@@ -27,24 +27,27 @@ def draw_markings():
 
     for i in range(len(markings)):
         pos, name = markings[i]
-        pygame.draw.circle(screen, WHITE, pos, 5)
-        font = pygame.font.Font(None, 20)
-        text = font.render(name, True, BLACK)
-        screen.blit(text, pos)
+        if pos is not None:  # Verificar se as coordenadas são válidas
+            pygame.draw.circle(screen, WHITE, pos, 5)
+            font = pygame.font.Font(None, 20)
+            text = font.render(name, True, BLACK)
+            screen.blit(text, pos)
 
-        if i > 0:
-            prev_pos, _ = markings[i - 1]
-            pygame.draw.line(screen, WHITE, prev_pos, pos)
-            diff_x = pos[0] - prev_pos[0]
-            diff_y = pos[1] - prev_pos[1]
-            diff_text = f"({diff_x}, {diff_y})"
+    for i in range(1, len(markings)):
+        pos, name = markings[i]
+        prev_pos, _ = markings[i - 1]
+        pygame.draw.line(screen, WHITE, prev_pos, pos)
+        diff_x = pos[0] - prev_pos[0]
+        diff_y = pos[1] - prev_pos[1]
+        diff_text = f"({diff_x}, {diff_y})"
 
-            midpoint_x = (pos[0] + prev_pos[0]) // 2
-            midpoint_y = (pos[1] + prev_pos[1]) // 2
+        midpoint_x = (pos[0] + prev_pos[0]) // 2
+        midpoint_y = (pos[1] + prev_pos[1]) // 2
 
-            if mouse_over_line(mouse_pos, prev_pos, pos):
-                text = font.render(str(diff_text), True, WHITE)
-                screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
+        if mouse_over_line(mouse_pos, prev_pos, pos):
+            text = font.render(str(diff_text), True, WHITE)
+            screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
+
 
 def mouse_over_line(mouse_pos, start_pos, end_pos):
     threshold = 5
@@ -60,8 +63,8 @@ def save_markings():
     try:
         with open("markings.txt", "w") as file:
             for pos, name in markings:
-                if name == "Desconhecida":
-                    file.write(f"{pos[0]},{pos[1]}\n")
+                if "Desconhecida" in name:
+                    file.write(f"{name}\n")
                 else:
                     file.write(f"{pos[0]},{pos[1]},{name}\n")
     except IOError:
@@ -74,9 +77,16 @@ def load_markings():
                 lines = file.readlines()
                 for line in lines:
                     try:
-                        x, y, name = line.strip().split(",")
-                        pos = (int(x), int(y))
-                        markings.append((pos, name))
+                        data = line.strip().split(",")
+                        if len(data) == 3:
+                            x, y, name = data
+                            if x == "-1" and y == "-1":
+                                pos = None
+                            else:
+                                pos = (int(x), int(y))
+                            markings.append((pos, name))
+                        else:
+                            print("Formato inválido para a linha:", line)
                     except ValueError:
                         print("Erro ao carregar as coordenadas das estrelas!")
         except IOError:
@@ -97,11 +107,10 @@ def open_dialog():
     root.update()
     try:
         name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
-        if name:
+        if name is not None:  
             return name
         else:
-            x, y = current_position
-            return f"Desconhecida ({x}, {y})"
+            return None
     except Exception as e:
         print("Erro ao exibir o diálogo:", str(e))
         return None
@@ -120,7 +129,6 @@ current_position = None
 
 while running:
     clock.tick(60)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             save_markings()
@@ -132,11 +140,14 @@ while running:
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1 and mouse_pressed:
                 mouse_pressed = False
-                if current_position:
-                    name = open_dialog()
-                    if name:
-                        markings.append((current_position, name))
-                    current_position = None
+            if current_position:
+                name = open_dialog()
+            if name is not None and name != "":  
+                markings.append((current_position, name))
+            elif name == "":
+                x, y = current_position
+                markings.append((current_position, f" {x}, {y},Desconhecida"))
+            current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
                 if not saved_points:
