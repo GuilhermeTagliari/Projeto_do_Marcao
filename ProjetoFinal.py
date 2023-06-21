@@ -54,10 +54,15 @@ def mouse_over_line(mouse_pos, start_pos, end_pos):
     x1, y1 = start_pos
     x2, y2 = end_pos
     x, y = mouse_pos
-
-    distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
-
+    
+    denominator = ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+    if denominator != 0:
+        distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / denominator
+    else:
+        distance = 0
+    
     return distance <= threshold
+
 
 def save_markings():
     try:
@@ -142,11 +147,13 @@ while running:
                 mouse_pressed = False
             if current_position:
                 name = open_dialog()
-            if name is not None and name != "":  
-                markings.append((current_position, name))
-            elif name == "":
-                x, y = current_position
-                markings.append((current_position, f" {x}, {y},Desconhecida"))
+                if name is not None and name != "":
+                    if not any(pos == current_position for pos, _ in markings): #nao deixa colocar estrela no mesmo local / nao salva
+                        markings.append((current_position, name))
+                elif name == "":
+                    x, y = current_position
+                    if not any(pos == current_position for pos, _ in markings):
+                        markings.append((current_position, f"{x}, {y}, Desconhecida"))
             current_position = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
