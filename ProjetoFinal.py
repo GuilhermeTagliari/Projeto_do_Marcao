@@ -2,96 +2,86 @@ import pygame
 import tkinter as tk
 from tkinter import simpledialog
 import os
-
 pygame.init()
-
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
-
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screenW = 800
+screenH = 600
+branco = (255, 255, 255)
+preto = (0, 0, 0)
+tela = pygame.display.set_mode((screenW, screenH))
 pygame.display.set_caption("Projeto de Guilherme Tagliari e Lorenzo Pasa")
-
-icon = pygame.image.load("icon2.png")
-pygame.display.set_icon(icon)
-
+icone = pygame.image.load("icon2.png")
+pygame.display.set_icon(icone)
 pygame.mixer.music.load("Space_Machine_Power.mp3")
 pygame.mixer.music.play(-1)
+background = pygame.image.load("imagem dos pilares da criação.png")
+marcacoes = []
+clock = pygame.time.Clock()
+running = True
+pontos_salvos = False
+botao_mouse = False
+posi_atual = None
 
-markings = []
+def marcar():
+    posi_mouse = pygame.mouse.get_pos()
 
-def draw_markings():
-    mouse_pos = pygame.mouse.get_pos()
+    for itens in range(len(marcacoes)):
+        posi, nome = marcacoes[itens]
+        if posi is not None:  # Verificar se as coordenadas são válidas
+            pygame.draw.circle(tela, branco, posi, 5)
+            fonte = pygame.font.Font(None, 20)
+            texto = fonte.render(nome, True, preto)
+            tela.blit(texto, posi)
 
-    for i in range(len(markings)):
-        pos, name = markings[i]
-        if pos is not None:  # Verificar se as coordenadas são válidas
-            pygame.draw.circle(screen, WHITE, pos, 5)
-            font = pygame.font.Font(None, 20)
-            text = font.render(name, True, BLACK)
-            screen.blit(text, pos)
-
-    for i in range(1, len(markings)):
-        pos, name = markings[i]
-        prev_pos, _ = markings[i - 1]
-        pygame.draw.line(screen, WHITE, prev_pos, pos)
-        diff_x = pos[0] - prev_pos[0]
-        diff_y = pos[1] - prev_pos[1]
-        diff_text = f"({diff_x}, {diff_y})"
-
-        midpoint_x = (pos[0] + prev_pos[0]) // 2
-        midpoint_y = (pos[1] + prev_pos[1]) // 2
-
-        if mouse_over_line(mouse_pos, prev_pos, pos):
-            text = font.render(str(diff_text), True, WHITE)
-            screen.blit(text, (midpoint_x - 30, midpoint_y + 10))
-
-
-def mouse_over_line(mouse_pos, start_pos, end_pos):
-    threshold = 5
-    x1, y1 = start_pos
-    x2, y2 = end_pos
-    x, y = mouse_pos
-    
-    denominator = ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
-    if denominator != 0:
-        distance = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / denominator
-    else:
-        distance = 0
-    
-    return distance <= threshold
+    for itens in range(1, len(marcacoes)):
+        posi, nome = marcacoes[itens]
+        posi_previa, _ = marcacoes[itens - 1]
+        pygame.draw.line(tela, branco, posi_previa, posi)
+        dife_x = posi[0] - posi_previa[0]
+        dife_y = posi[1] - posi_previa[1]
+        texto_dife = f"({dife_x}, {dife_y})"
+        medio_x = (posi[0] + posi_previa[0]) // 2
+        medio_y = (posi[1] + posi_previa[1]) // 2
+        if dife_cord(posi_mouse, posi_previa, posi):
+            texto = fonte.render(str(texto_dife), True, branco)
+            tela.blit(texto, (medio_x - 30, medio_y + 10))
 
 
-def save_markings():
+def dife_cord(posi_mouse, posi_inicial, posi_final):
+    limitador = 5
+    x1, y1 = posi_inicial
+    x2, y2 = posi_final
+    x, y = posi_mouse
+    distancia = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+    return distancia <= limitador
+
+def salvar_marcas():
     try:
         with open("markings.txt", "w") as file:
-            for pos, name in markings:
-                if "Desconhecida" in name:
-                    file.write(f"{name}\n")
+            for posi, nome in marcacoes:
+                if "Desconhecida" in nome:
+                    file.write(f"{nome}\n")
                 else:
-                    file.write(f"{pos[0]},{pos[1]},{name}\n")
+                    file.write(f"{posi[0]},{posi[1]},{nome}\n")
     except IOError:
         print("Erro ao salvar os pontos!")
 
-def load_markings():
+def carregar_marcas():
     if os.path.exists("markings.txt"):
         try:
             with open("markings.txt", "r") as file:
-                lines = file.readlines()
-                for line in lines:
+                linhas = file.readlines()
+                for linha in linhas:
                     try:
-                        data = line.strip().split(",")
-                        if len(data) == 3:
-                            x, y, name = data
+                        salvar = linha.strip().split(",")
+                        if len(salvar) == 3:
+                            x, y, nome = salvar
                             if x == "-1" and y == "-1":
-                                pos = None
+                                posi = None
                             else:
-                                pos = (int(x), int(y))
-                            markings.append((pos, name))
+                                posi = (int(x), int(y))
+                            marcacoes.append((posi, nome))
                         else:
-                            print("Formato inválido para a linha:", line)
+                            print("Formato inválido para a linha:", linha)
                     except ValueError:
                         print("Erro ao carregar as coordenadas das estrelas!")
         except IOError:
@@ -99,87 +89,76 @@ def load_markings():
     else:
         print("Arquivo de marcações não encontrado.")
 
-def clear_markings():
+def limpar():
     if os.path.exists("markings.txt"):
         try:
             os.remove("markings.txt")
         except OSError:
             print("Erro ao deletar os pontos!")
 
-def open_dialog():
-    root = tk.Tk()
-    root.withdraw()
-    root.update()
+def nome_estrelas():
+    teste = tk.Tk()
+    teste.withdraw()
+    teste.update()
     try:
-        name = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
-        if name is not None:  
-            return name
+        nome = simpledialog.askstring("Nome da Estrela", "Digite o nome da estrela:")
+        if nome is not None:  
+            return nome
         else:
             return None
-    except Exception as e:
-        print("Erro ao exibir o diálogo:", str(e))
+    except Exception as erro:
+        print("Erro ao exibir o diálogo:", str(erro))
         return None
 
-def display_text(text, font, color, x, y):
-    text_surface = font.render(text, True, color)
-    screen.blit(text_surface, (x, y))
+def mostar_texto(texto, fonte, cor, x, y):
+    txt = fonte.render(texto, True, cor)
+    tela.blit(txt, (x, y))
 
-background = pygame.image.load("imagem dos pilares da criação.png")
-
-clock = pygame.time.Clock()
-running = True
-saved_points = False
-mouse_pressed = False
-current_position = None
 
 while running:
     clock.tick(60)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            save_markings()
+            salvar_marcas()
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
-                mouse_pressed = True
-                current_position = pygame.mouse.get_pos()
+                botao_mouse = True
+                posi_atual = pygame.mouse.get_pos()
         elif event.type == pygame.MOUSEBUTTONUP:
-            if event.button == 1 and mouse_pressed:
-                mouse_pressed = False
-            if current_position:
-                name = open_dialog()
-                if name is not None and name != "":
-                    if not any(pos == current_position for pos, _ in markings): #nao deixa colocar estrela no mesmo local / nao salva
-                        markings.append((current_position, name))
-                elif name == "":
-                    x, y = current_position
-                    if not any(pos == current_position for pos, _ in markings):
-                        markings.append((current_position, f"{x}, {y}, Desconhecida"))
-            current_position = None
+            if event.button == 1 and botao_mouse:
+                botao_mouse = False
+            if posi_atual:
+                nome = nome_estrelas()
+            if nome is not None and nome != "":  
+                marcacoes.append((posi_atual, nome))
+            elif nome == "":
+                x, y = posi_atual
+                marcacoes.append((posi_atual, f" {x}, {y},Desconhecida"))
+            posi_atual = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
-                if not saved_points:
-                    save_markings()
-                    saved_points = True
+                if not pontos_salvos:
+                    salvar_marcas()
+                    pontos_salvos = True
             elif event.key == pygame.K_F11:
-                load_markings()
-                saved_points = False
+                carregar_marcas()
+                pontos_salvos = False
             elif event.key == pygame.K_ESCAPE:
-                save_markings()
+                salvar_marcas()
                 running = False
             elif event.key == pygame.K_F12:
-                clear_markings()
-                saved_points = False
+                limpar()
+                pontos_salvos = False
 
-    screen.blit(background, (0, 0))
-    draw_markings()
-
-    font = pygame.font.Font(None, 20)
-    display_text("F10 Para salvar os pontos", font, WHITE, 10, 10)
-    display_text("F11 Para carregar os pontos salvos", font, WHITE, 10, 30)
-    display_text("F12 Para deletar os pontos", font, WHITE, 10, 50)
-
-    if saved_points:
-        display_text("Pontos salvos!", font, WHITE, 10, 70)
+    tela.blit(background, (0, 0))
+    marcar()
+    fonte = pygame.font.Font(None, 20)
+    mostar_texto("F10 Para salvar os pontos", fonte, branco, 10, 10)
+    mostar_texto("F11 Para carregar os pontos salvos", fonte, branco, 10, 30)
+    mostar_texto("F12 Para deletar os pontos", fonte, branco, 10, 50)
+    if pontos_salvos:
+        mostar_texto("Pontos salvos!", fonte, branco, 10, 70)
 
     pygame.display.flip()
 
