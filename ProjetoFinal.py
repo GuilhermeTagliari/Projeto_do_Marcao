@@ -51,7 +51,11 @@ def dife_cord(posi_mouse, posi_inicial, posi_final):
     x1, y1 = posi_inicial
     x2, y2 = posi_final
     x, y = posi_mouse
-    distancia = abs((y2 - y1) * x - (x2 - x1) * y + x2 * y1 - y2 * x1) / ((y2 - y1) ** 2 + (x2 - x1) ** 2) ** 0.5
+    denominador=((y2 -y1) ** 2 + (x2 -x1) **2)** 0.5
+    if denominador !=0:
+        distancia=abs((y2 - y1) * x - (x2 -x1) * y + x2 * y1 -y2 * x1)/denominador
+    else:
+        distancia=0
     return distancia <= limitador
 
 def salvar_marcas():
@@ -130,11 +134,13 @@ while running:
                 botao_mouse = False
             if posi_atual:
                 nome = nome_estrelas()
-            if nome is not None and nome != "":  
-                marcacoes.append((posi_atual, nome))
+            if nome is not None and nome != "":
+                if not any(posi==posi_atual for posi,_ in marcacoes):
+                    marcacoes.append((posi_atual, nome))
             elif nome == "":
-                x, y = posi_atual
-                marcacoes.append((posi_atual, f" {x}, {y},Desconhecida"))
+                x,y = posi_atual
+                if not any((posi == posi_atual for posi, _ in marcacoes)):
+                    marcacoes.append((posi_atual,f"{x},{y}, Desconhecida"))
             posi_atual = None
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_F10:
